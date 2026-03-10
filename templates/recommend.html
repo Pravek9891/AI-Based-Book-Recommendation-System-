@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover | Infinite Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+</head>
+
+<body>
+    <div class="cursor-follower"></div>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">INFINITE LIBRARY</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/recommend" class="nav-link">Discover</a>
+            <a href="#" class="nav-link">About</a>
+        </div>
+    </nav>
+
+    <div class="search-section" data-aos="fade-up">
+        <h1>Discover.</h1>
+        <p>Your portal to infinite stories. Type a title to reveal your next journey.</p>
+
+        <form action="/recommend_books" method="post" class="search-box">
+            <input name="user_input" id="search-input" type="text" placeholder="Search for a book (e.g., The Hobbit)"
+                required autocomplete="off">
+            <div id="autocomplete-results"></div>
+            <button type="submit" class="btn-glass" style="padding: 0.8rem 2rem;">Search</button>
+        </form>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const resultsBox = document.getElementById('autocomplete-results');
+        let debounceTimer;
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = searchInput.value.trim();
+
+            if (query.length < 2) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/suggest?query=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            resultsBox.innerHTML = data.map(title =>
+                                `<div class="suggestion-item">${title}</div>`
+                            ).join('');
+                            resultsBox.style.display = 'block';
+
+                            // Handle selection
+                            document.querySelectorAll('.suggestion-item').forEach(item => {
+                                item.addEventListener('click', () => {
+                                    searchInput.value = item.innerText;
+                                    resultsBox.style.display = 'none';
+                                    searchInput.closest('form').submit();
+                                });
+                            });
+                        } else {
+                            resultsBox.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                resultsBox.style.display = 'none';
+            }
+        });
+    </script>
+
+    <div class="container">
+        {% if data %}
+        <div class="book-container">
+            {% for i in data %}
+            <a href="/book/{{ i[0]|urlencode }}" class="book-card" data-aos="fade-up"
+                data-aos-delay="{{ loop.index0 * 100 }}" style="text-decoration: none; color: inherit;">
+                <img src="{{ i[2] }}" alt="{{ i[0] }}">
+                <h4>{{ i[0] }}</h4>
+                <p>{{ i[1] }}</p>
+                <div class="stats" style="justify-content: center;">
+                    <span style="color: var(--secondary)">Highly Recommended</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% elif request.method == 'POST' %}
+        <div style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            <p>No matches found in this sector. Try another title.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out-cubic',
+            once: true
+        });
+    </script>
+    <script type="module" src="{{ url_for('static', filename='scene.js') }}"></script>
+
+    {% include 'chat_widget.html' %}
+
+</body>
+
+</html>

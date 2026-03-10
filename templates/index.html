@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Library | AI Book Recommender</title>
+    <!-- Modern Styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <!-- AOS & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+</head>
+
+<body>
+    <div class="cursor-follower"></div>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">INFINITE LIBRARY</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/recommend" class="nav-link">Discover</a>
+            <a href="#" class="nav-link">About</a>
+        </div>
+    </nav>
+
+    <header class="hero" data-aos="zoom-out" data-aos-duration="1500">
+        <h1>Cosmic Knowledge</h1>
+        <p>Explore the Top 50 most influential books in our collection, curated by thousands of readers worldwide.</p>
+        <div style="margin-top: 2rem;">
+            <a href="/recommend" class="btn-glass">Start Recommending</a>
+        </div>
+    </header>
+
+    <div class="genre-filter-container" data-aos="fade-up">
+        <div class="genre-scroll">
+            <a href="/?genre=All" class="genre-btn {% if active_genre == 'All' %}active{% endif %}">All</a>
+            {% for genre in genres %}
+            <a href="/?genre={{ genre }}" class="genre-btn {% if active_genre == genre %}active{% endif %}">{{ genre
+                }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="book-container" id="book-grid">
+            {% for i in range(book_name|length) %}
+            <a href="/book/{{ book_name[i]|urlencode }}" class="book-card" data-aos="fade-up"
+                data-aos-delay="{{ loop.index0 % 4 * 100 }}" style="text-decoration: none; color: inherit;">
+                <img src="{{ image[i] }}" alt="{{ book_name[i] }}">
+                <h4>{{ book_name[i] }}</h4>
+                <p>{{ author[i] }}</p>
+                <div class="stats">
+                    <span><i class="fas fa-vote-yea"></i> {{ votes[i] }}</span>
+                    <span><i class="fas fa-star"></i> {{ rating[i] }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.genre-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Update UI state
+                document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const genre = this.getAttribute('href').split('=')[1];
+                const grid = document.getElementById('book-grid');
+
+                // Instant UI feedback: Dim the grid and disable clicks
+                grid.style.opacity = '0.4';
+                grid.style.pointerEvents = 'none';
+                grid.style.transition = 'opacity 0.2s ease';
+
+                fetch(`/filter_books?genre=${genre}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        grid.innerHTML = ''; // Clear grid
+
+                        data.forEach((book, index) => {
+                            const card = `
+                            <a href="/book/${encodeURIComponent(book['Book-Title'])}" class="book-card" data-aos="fade-up" data-aos-delay="${(index % 4) * 100}" style="text-decoration: none; color: inherit;">
+                                <img src="${book['Image-URL-M']}" alt="${book['Book-Title']}">
+                                <h4>${book['Book-Title']}</h4>
+                                <p>${book['Book-Author']}</p>
+                                <div class="stats">
+                                    <span><i class="fas fa-vote-yea"></i> ${book['num_ratings']}</span>
+                                    <span><i class="fas fa-star"></i> ${book['avg_rating']}</span>
+                                </div>
+                            </a>`;
+                            grid.innerHTML += card;
+                        });
+
+                        // Re-trigger AOS for the new elements
+                        if (window.AOS) {
+                            AOS.refreshHard();
+                        }
+
+                        // Restore UI
+                        grid.style.opacity = '1';
+                        grid.style.pointerEvents = 'auto';
+                    });
+            });
+        });
+    </script>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out-cubic',
+            once: true
+        });
+    </script>
+    <script type="module" src="{{ url_for('static', filename='scene.js') }}"></script>
+
+    {% include 'chat_widget.html' %}
+
+</body>
+
+</html>
