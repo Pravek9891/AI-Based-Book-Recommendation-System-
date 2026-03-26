@@ -111,4 +111,4 @@ The system uses a optimized relational schema:
 ---
 
 ## 🌌 Cosmic Vision
-This project isn't just a book recommender; it's an exploration of how AI and modern web technologies can transform the traditional library experience into something truly infinite.
+This project isn't just a book recommender, it's an exploration of how AI and modern web technologies can transform the traditional library experience into something truly infinite.
