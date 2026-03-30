@@ -44,7 +44,7 @@ The core logic resides in a **Flask** (Python) application, optimized for perfor
 ### 2. AI & NLP (Natural Language Processing)
 -   **Groq Llama 3.3 Integration**: Processes user queries and generates high-fidelity book summaries using the Groq Cloud API.
 -   **Collaborative Filtering**: Uses `pickle` to load pre-calculated similarity matrices (`similarity_scores.pkl` and `pt.pkl`). It identifies patterns in user ratings to suggest books with high mathematical "compatibility."
--   **Cosine Similarity**: The mathematical core of the recommendation engine, calculating the distance between vectors in a multi-dimensional book-user space.
+-   **Cosine Similarity**: The mathematical core of the recommendation engine, calculating the distance between vectors in a multi-dimensional book-user space
 
 ### 3. RAG (Retrieval-Augmented Generation)
 The chatbot utilizes **RAG** to provide grounded, factual information:
