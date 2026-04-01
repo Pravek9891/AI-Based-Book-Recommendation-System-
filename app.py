@@ -2,106 +2,50 @@ import os
 from flask import Flask, render_template, request, jsonify, session
 import pickle
 import numpy as np
+import pandas as pd
 import wikipedia
 from groq import Groq
 from dotenv import load_dotenv
 
-import mysql.connector.pooling
-
 load_dotenv()
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Database Configuration with Connection Pooling
-db_config = {
-    "host": os.getenv("MYSQL_HOST", "localhost"),
-    "user": os.getenv("MYSQL_USER", "root"),
-    "password": os.getenv("MYSQL_PASSWORD", "password"),
-    "database": os.getenv("MYSQL_DB", "book_recommender"),
-    "charset": 'latin1'
-}
-
-db_pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="book_pool",
-    pool_size=5,
-    **db_config
-)
-
-def get_db_connection():
-    return db_pool.get_connection()
-
-# In-Memory Cache for Popular Books & Genres
-GENRE_CACHE = {}
-ALL_GENRES_CACHE = None
-
-# Logic pickles still needed for matrix math
-pt = pickle.load(open('pt.pkl','rb'))
-similarity_scores = pickle.load(open('similarity_scores.pkl','rb'))
-# popular_df and books pkl are now replaced by MySQL for metadata
+# Loading the original dataframes and pickles
+popular_df = pd.read_pickle('popular.pkl')
+pt = pd.read_pickle('pt.pkl')
+books = pd.read_pickle('books.pkl')
+similarity_scores = pd.read_pickle('similarity_scores.pkl')
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_key_for_chatbot")
 
 @app.route('/')
 def index():
-    global ALL_GENRES_CACHE
-    selected_genre = request.args.get('genre', 'All')
-    
-    # 1. Get Genres (Cached)
-    if ALL_GENRES_CACHE is None:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT DISTINCT category FROM popular_books WHERE category IS NOT NULL ORDER BY category")
-        ALL_GENRES_CACHE = [row['category'] for row in cursor.fetchall()]
-        cursor.close()
-        conn.close()
-    
-    # 2. Get Popular Books (Cached)
-    if selected_genre not in GENRE_CACHE:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        if selected_genre == 'All':
-            cursor.execute("SELECT * FROM popular_books")
-        else:
-            cursor.execute("SELECT * FROM popular_books WHERE category = %s", (selected_genre,))
-        GENRE_CACHE[selected_genre] = cursor.fetchall()
-        cursor.close()
-        conn.close()
-    
-    popular_books = GENRE_CACHE[selected_genre]
-
+    genres = sorted(list(set(popular_df['category']))) if 'category' in popular_df.columns else []
     return render_template('index.html',
-                           book_name = [b['Book-Title'] for b in popular_books],
-                           author=[b['Book-Author'] for b in popular_books],
-                           image=[b['Image-URL-M'] for b in popular_books],
-                           votes=[b['num_ratings'] for b in popular_books],
-                           rating=[b['avg_rating'] for b in popular_books],
-                           genres=ALL_GENRES_CACHE,
-                           active_genre=selected_genre
+                           book_name=list(popular_df['Book-Title'].values),
+                           author=list(popular_df['Book-Author'].values),
+                           image=list(popular_df['Image-URL-M'].values),
+                           votes=list(popular_df['num_ratings'].values),
+                           rating=list(popular_df['avg_rating'].values),
+                           genres=genres,
+                           active_genre='All'
                            )
 
 @app.route('/filter_books')
 def filter_books():
     genre = request.args.get('genre', 'All')
+    if 'category' not in popular_df.columns or genre == 'All':
+        return jsonify(popular_df.to_dict(orient='records'))
     
-    if genre not in GENRE_CACHE:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        if genre == 'All':
-            cursor.execute("SELECT * FROM popular_books")
-        else:
-            cursor.execute("SELECT * FROM popular_books WHERE category = %s", (genre,))
-        GENRE_CACHE[genre] = cursor.fetchall()
-        cursor.close()
-        conn.close()
-    
-    # Return JSON from cache
-    return jsonify(GENRE_CACHE[genre])
+    filtered = popular_df[popular_df['category'] == genre]
+    return jsonify(filtered.to_dict(orient='records'))
 
 @app.route('/recommend')
 def recommend_ui():
     return render_template('recommend.html')
 
-@app.route('/recommend_books',methods=['post'])
+@app.route('/recommend_books', methods=['post'])
 def recommend():
     user_input = request.form.get('user_input')
     
@@ -113,44 +57,30 @@ def recommend():
     similar_items = sorted(list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True)[1:5]
 
     data = []
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     for i in similar_items:
+        item = []
         book_title = pt.index[i[0]]
-        # Fetch metadata from MySQL
-        cursor.execute("SELECT `Book-Title`, `Book-Author`, `Image-URL-M` FROM books WHERE `Book-Title` = %s LIMIT 1", (book_title,))
-        book_data = cursor.fetchone()
-        
-        if book_data:
-            item = [
-                book_data['Book-Title'],
-                book_data['Book-Author'],
-                book_data['Image-URL-M']
-            ]
-            data.append(item)
+        temp_df = books[books['Book-Title'] == book_title]
+        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
+        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
+        item.extend(list(temp_df.drop_duplicates('Book-Title')['Image-URL-M'].values))
 
-    cursor.close()
-    conn.close()
+        data.append(item)
 
     print(data)
-    return render_template('recommend.html',data=data)
+    return render_template('recommend.html', data=data)
 
 @app.route('/book/<path:title>')
 def book_details(title):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
     # Fetch book info
-    cursor.execute("SELECT * FROM books WHERE `Book-Title` = %s LIMIT 1", (title,))
-    book = cursor.fetchone()
-    
-    if not book:
-        cursor.close()
-        conn.close()
+    temp_df = books[books['Book-Title'] == title]
+    if temp_df.empty:
         return "Book Navigator Lost: Title not found in this sector.", 404
+        
+    book_df = temp_df.drop_duplicates('Book-Title').iloc[0]
+    book = book_df.to_dict()
 
-    # Recommendations (Similar to recommend function)
+    # Recommendations
     recommendations = []
     if title in pt.index:
         idx = np.where(pt.index == title)[0][0]
@@ -158,13 +88,10 @@ def book_details(title):
         
         for i in similar_items:
             rec_title = pt.index[i[0]]
-            cursor.execute("SELECT `Book-Title`, `Book-Author`, `Image-URL-M` FROM books WHERE `Book-Title` = %s LIMIT 1", (rec_title,))
-            rec_data = cursor.fetchone()
-            if rec_data:
-                recommendations.append([rec_data['Book-Title'], rec_data['Book-Author'], rec_data['Image-URL-M']])
-    
-    cursor.close()
-    conn.close()
+            rec_df = books[books['Book-Title'] == rec_title]
+            if not rec_df.empty:
+                rec_df = rec_df.drop_duplicates('Book-Title').iloc[0]
+                recommendations.append([rec_df['Book-Title'], rec_df['Book-Author'], rec_df['Image-URL-M']])
 
     # AI Summary
     try:
@@ -188,20 +115,14 @@ def chat():
     user_message = request.json.get('message', '')
     
     if 'current_book' not in session:
-        # Match book using MySQL for efficiency
         book_match = None
         user_lower = user_message.lower()
         
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
         # Search for titles containing the user's message
-        cursor.execute("SELECT `Book-Title` FROM books WHERE `Book-Title` LIKE %s LIMIT 1", (f"%{user_message}%",))
-        result = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if result:
-            book_match = result['Book-Title']
+        contains_match = books[books['Book-Title'].str.lower().str.contains(user_lower, na=False, regex=False)]
+        
+        if not contains_match.empty:
+            book_match = contains_match.iloc[0]['Book-Title']
         
         if book_match:
             session['current_book'] = book_match
@@ -245,16 +166,10 @@ def suggest():
     if len(query) < 2:
         return jsonify([])
     
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    # Search for books that start with or contain the query
-    cursor.execute("SELECT DISTINCT `Book-Title` FROM books WHERE `Book-Title` LIKE %s LIMIT 8", (f"%{query}%",))
-    results = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    titles = [row['Book-Title'] for row in results]
-    return jsonify(titles)
+    # Filter suggestions by pt.index to ensure we only suggest recommendable books
+    query_lower = query.lower()
+    matches = [title for title in pt.index if query_lower in title.lower()][:8]
+    return jsonify(matches)
 
 @app.route('/reset_chat', methods=['POST'])
 def reset_chat():
@@ -264,4 +179,3 @@ def reset_chat():
 
 if __name__ == '__main__':
     app.run(debug=True)
-    ## 

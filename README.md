@@ -35,10 +35,9 @@ Welcome to the **Infinite Library**, a premium, AI-driven book discovery platfor
 
 The "Infinite Library" follows a modular architecture designed for speed, scalability, and visual excellence.
 
-### 1. Backend: Flask & MySQL
+### 1. Backend: Flask & Pandas
 The core logic resides in a **Flask** (Python) application, optimized for performance:
--   **MySQL Connection Pooling**: Uses `mysql.connector.pooling` to manage database connections efficiently, ensuring near-instant response times.
--   **Server-Side Caching**: Implements in-memory caching for popular genres and book lists to minimize database load.
+-   **Pandas-Driven In-Memory Filtering**: Leverages serialized DataFrames via `pandas` to process and filter large datasets instantly, bypassing the need for an external SQL database.
 -   **RESTful API**: Clean endpoints for book filtering, recommendations, and AI interactions.
 
 ### 2. AI & NLP (Natural Language Processing)
@@ -65,7 +64,7 @@ The frontend is built for a "WOW" experience:
 | :--- | :--- |
 | **Language** | Python 3.x, JavaScript (ES6+) |
 | **Framework** | Flask |
-| **Database** | MySQL (8.0+) |
+| **Database** | Pandas / `.pkl` binaries |
 | **AI Model** | Groq (Llama-3.3-70b-versatile) |
 | **NLP Utilities** | NumPy, Pandas, Wikipedia-API |
 | **3D Graphics** | Three.js |
@@ -85,10 +84,7 @@ The frontend is built for a "WOW" experience:
 Create a `.env` file in the root directory:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
-MYSQL_DB=book_recommender
+FLASK_SECRET_KEY=cosmic_librarian_secret
 FLASK_SECRET_KEY=cosmic_librarian_secret
 ```
 
@@ -103,10 +99,15 @@ python app.py
 
 ---
 
-## 📜 Database Schema
-The system uses a optimized relational schema:
--   `books`: Metadata for all library titles (Authors, Publishers, Image URLs).
--   `popular_books`: Curated view of highly-rated books for the home galaxy (homepage).
+### 4. Generating the Machine Learning Models (No `pkl` pushed)
+This project uses `.pkl` binaries that are created via a Jupyter Data Science pipeline. You must generate them locally!
+1. Download `books.csv`, `users.csv`, and `ratings.csv` to this directory.
+2. Open and Run ALL cells inside `book-recommender-system.ipynb`. This will build your AI models and output `books.pkl`, `popular.pkl`, `pt.pkl`, and `similarity_scores.pkl`.
+3. Finally, run the genre extraction script to categorize the home page:
+   ```powershell
+   python add_genres.py
+   ```
+4. Now, run `python app.py` and enjoy!
 
 ---
 
