@@ -177,5 +177,6 @@ def reset_chat():
     session.pop('book_summary', None)
     return jsonify({'response': "Chat reset. Which book do you want to ask about?"})
 
+#
 if __name__ == '__main__':
     app.run(debug=True)
