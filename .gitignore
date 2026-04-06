@@ -1,7 +1,5 @@
 .venv/
 .idea/
 __pycache__/
-*.csv
 .env
 *.log
-*.pkl
