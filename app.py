@@ -17,7 +17,7 @@ client = Groq(api_key=api_key)
 popular_df = pd.read_pickle('popular.pkl')
 pt = pd.read_pickle('pt.pkl')
 books = pd.read_pickle('books.pkl')
-similarity_scores = pd.read_pickle('similarity_scores.pkl')
+model = pd.read_pickle('model.pkl')
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_key_for_chatbot")
@@ -52,17 +52,18 @@ def recommend_ui():
 def recommend():
     user_input = request.form.get('user_input')
     
-    # Check if book exists in index to prevent IndexError
     if user_input not in pt.index:
         return render_template('recommend.html', data=None)
 
-    index = np.where(pt.index == user_input)[0][0]
-    similar_items = sorted(list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True)[1:5]
+    # Use Scikit-Learn Model to dynamically predict top 5 neighbors
+    book_index = np.where(pt.index == user_input)[0][0]
+    distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=6)
+    
+    similar_items = [pt.index[i] for i in indices[0][1:]]
 
     data = []
-    for i in similar_items:
+    for book_title in similar_items:
         item = []
-        book_title = pt.index[i[0]]
         temp_df = books[books['Book-Title'] == book_title]
         item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
         item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
@@ -86,11 +87,11 @@ def book_details(title):
     # Recommendations
     recommendations = []
     if title in pt.index:
-        idx = np.where(pt.index == title)[0][0]
-        similar_items = sorted(list(enumerate(similarity_scores[idx])), key=lambda x: x[1], reverse=True)[1:5]
+        book_index = np.where(pt.index == title)[0][0]
+        distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=6)
+        similar_items = [pt.index[i] for i in indices[0][1:]]
         
-        for i in similar_items:
-            rec_title = pt.index[i[0]]
+        for rec_title in similar_items:
             rec_df = books[books['Book-Title'] == rec_title]
             if not rec_df.empty:
                 rec_df = rec_df.drop_duplicates('Book-Title').iloc[0]

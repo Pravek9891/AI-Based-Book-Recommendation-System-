@@ -99,15 +99,25 @@ python app.py
 
 ---
 
-### 4. Generating the Machine Learning Models (No `pkl` pushed)
-This project uses `.pkl` binaries that are created via a Jupyter Data Science pipeline. You must generate them locally!
-1. Download `books.csv`, `users.csv`, and `ratings.csv` to this directory.
-2. Open and Run ALL cells inside `book-recommender-system.ipynb`. This will build your AI models and output `books.pkl`, `popular.pkl`, `pt.pkl`, and `similarity_scores.pkl`.
-3. Finally, run the genre extraction script to categorize the home page:
+### 4. Generating the Machine Learning Models (If no `.pkl` files exist)
+If you clone this repository without the pre-generated model files, you must generate them locally. The old giant similarity matrix has been removed in favor of a highly-optimized O(1) dictionary lookup.
+
+1. Download the Kaggle **Book Recommendation Dataset**.
+2. Create a folder named `archive` in the root directory and place `Books.csv`, `Users.csv`, and `Ratings.csv` inside it.
+3. Run the optimized machine-learning pipeline to filter the data and calculate the closest neighbors:
+   ```powershell
+   python train_model.py
+   ```
+4. Finally, run the genre extraction script to categorize the Top 50 home page books:
    ```powershell
    python add_genres.py
    ```
-4. Now, run `python app.py` and enjoy!
+   
+*(Note: You can skip solving the Jupyter Notebook `book-recommender-system.ipynb`. That file is kept purely as documentation of the original mathematical theory!)*
+5. Run the web server!
+   ```powershell
+   python app.py
+   ```
 
 ---
 

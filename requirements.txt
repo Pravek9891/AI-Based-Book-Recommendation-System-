@@ -6,3 +6,4 @@ google-generativeai
 wikipedia
 python-dotenv
 groq
+scikit-learn

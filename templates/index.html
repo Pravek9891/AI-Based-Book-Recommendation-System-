@@ -59,7 +59,7 @@
             <a href="/book/{{ book_name[i]|urlencode }}" class="book-card" data-aos="fade-up"
                 data-aos-delay="{{ loop.index0 % 4 * 100 }}" style="text-decoration: none; color: inherit;">
                 <img src="{{ image[i] }}" alt="{{ book_name[i] }}">
-                <h4>{{ book_name[i] }}</h4>
+                <h4>{{ book_name[i]|replace('&amp;', '&') }}</h4>
                 <p>{{ author[i] }}</p>
                 <div class="stats">
                     <span><i class="fas fa-vote-yea"></i> {{ votes[i] }}</span>
@@ -96,7 +96,7 @@
                             const card = `
                             <a href="/book/${encodeURIComponent(book['Book-Title'])}" class="book-card" data-aos="fade-up" data-aos-delay="${(index % 4) * 100}" style="text-decoration: none; color: inherit;">
                                 <img src="${book['Image-URL-M']}" alt="${book['Book-Title']}">
-                                <h4>${book['Book-Title']}</h4>
+                                <h4>${book['Book-Title'].replace(/&amp;/g, '&')}</h4>
                                 <p>${book['Book-Author']}</p>
                                 <div class="stats">
                                     <span><i class="fas fa-vote-yea"></i> ${book['num_ratings']}</span>
