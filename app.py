@@ -158,7 +158,7 @@ def chat():
             return jsonify({'response': completion.choices[0].message.content})
         except Exception as e:
             print("Error generating content:", e)
-            return jsonify({'response': f"Groq Error: {str(e)}. Please check your GROQ_API_KEY in .env."})
+            return jsonify({'response': f"My AI sensors are offline right now because I don't have a valid API Key. To awaken my true intelligence, please add a valid GROQ_API_KEY to your `.env` file! For now, here's what I know from Wikipedia: {book_summary}"})
 
 @app.route('/suggest')
 def suggest():
