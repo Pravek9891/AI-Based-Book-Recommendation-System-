@@ -8,7 +8,10 @@ from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+api_key = os.environ.get("GROQ_API_KEY")
+if not api_key:
+    api_key = "dummy_deploy_key"
+client = Groq(api_key=api_key)
 
 # Loading the original dataframes and pickles
 popular_df = pd.read_pickle('popular.pkl')
@@ -177,6 +180,6 @@ def reset_chat():
     session.pop('book_summary', None)
     return jsonify({'response': "Chat reset. Which book do you want to ask about?"})
 
-#
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
