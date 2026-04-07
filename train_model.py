@@ -26,19 +26,20 @@ books = pd.read_csv(books_path, low_memory=False)
 print("Merging...")
 ratings_with_name = ratings.merge(books, on='ISBN')
 
-print("Filtering users (min 50 interactions)...")
+print("Filtering users (min 150 interactions to save memory)...")
 x = ratings_with_name.groupby('User-ID').count()['Book-Rating']
-padhe_likhe_users = x[x > 50].index
+padhe_likhe_users = x[x > 150].index
 filtered_rating = ratings_with_name[ratings_with_name['User-ID'].isin(padhe_likhe_users)]
 
-print("Filtering books (min 10 interactions)...")
+print("Filtering books (min 30 interactions to save memory)...")
 y = filtered_rating.groupby('Book-Title').count()['Book-Rating']
-famous_books = y[y >= 10].index
+famous_books = y[y >= 30].index
 final_ratings = filtered_rating[filtered_rating['Book-Title'].isin(famous_books)]
 
 print("Creating pivot table 'pt'...")
 pt = final_ratings.pivot_table(index='Book-Title', columns='User-ID', values='Book-Rating')
 pt.fillna(0, inplace=True)
+pt = pt.astype(np.float32) # Instantly halves matrix RAM footprint
 print("Shape of pt:", pt.shape)
 
 print("Training Machine Learning Model (NearestNeighbors)...")
