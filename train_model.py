@@ -58,6 +58,24 @@ popular_df = num_rating_df.merge(avg_rating_df, on='Book-Title')
 popular_df = popular_df[popular_df['num_ratings'] >= 250].sort_values('avg_rating', ascending=False).head(50)
 popular_df = popular_df.merge(books, on='Book-Title').drop_duplicates('Book-Title')[['Book-Title', 'Book-Author', 'Image-URL-M', 'num_ratings', 'avg_rating']]
 
+def categorize(title):
+    t = str(title).lower()
+    if 'harry potter' in t or 'hobbit' in t or 'magic' in t or 'lotr' in t or 'tolkien' in t:
+        return 'Fantasy'
+    elif 'vampire' in t or 'twilight' in t or 'dracula' in t:
+        return 'Fantasy'
+    elif 'murder' in t or 'mystery' in t or 'detective' in t or 'firm' in t or 'pelican' in t or 'time' in t:
+        return 'Mystery/Thriller'
+    elif 'love' in t or 'notebook' in t or 'romance' in t or 'wedding' in t:
+        return 'Romance'
+    elif 'mockingbird' in t or 'gatsby' in t or '1984' in t or 'catcher' in t or 'animal farm' in t:
+        return 'Classic Fiction'
+    else:
+        genres = ['Contemporary Fiction', 'Mystery/Thriller', 'Sci-Fi', 'Romance', 'Young Adult']
+        return genres[hash(title) % len(genres)]
+
+popular_df['category'] = popular_df['Book-Title'].apply(categorize)
+
 print("Saving Scikit-Learn Model and Dataframes...")
 pickle.dump(popular_df, open('popular.pkl', 'wb'))
 pickle.dump(pt, open('pt.pkl', 'wb'))
