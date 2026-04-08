@@ -1,159 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ book['Book-Title'] }} | Infinite Library</title>
+    <title>{{ book['Book-Title'] }} | AI Book Recommender</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
     <style>
-        .detail-container {
-            padding-top: 8rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-bottom: 5rem;
-        }
-
-        .book-hero {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 4rem;
-            align-items: start;
-            margin-bottom: 5rem;
-        }
-
-        .book-cover {
-            position: sticky;
-            top: 10rem;
-        }
-
-        .book-cover img {
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--glass-border);
-            border: 1px solid var(--glass-border);
-        }
-
-        .book-info h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            line-height: 1.1;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .book-meta {
-            font-size: 1.25rem;
-            color: var(--text-dim);
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .book-meta span {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .book-meta i {
-            color: var(--primary);
-        }
-
-        .ai-summary-box {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 2.5rem;
-            margin-bottom: 4rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ai-summary-box::before {
-            content: 'AI ANALYSIS';
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--primary);
-            opacity: 0.5;
-        }
-
-        .ai-summary-box h3 {
-            margin-bottom: 1.5rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .ai-summary-box p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: var(--text);
-        }
-
-        .more-like-this h2 {
-            font-size: 2rem;
-            margin-bottom: 2.5rem;
-            text-align: center;
-        }
-
-        @media (max-width: 992px) {
-            .book-hero {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 2rem;
-            }
-
-            .book-cover {
-                max-width: 300px;
-                margin: 0 auto;
-                position: relative;
-                top: 0;
-            }
-
-            .book-info h1 {
-                font-size: 2.5rem;
-            }
-
-            .book-meta {
-                justify-content: center;
-            }
+        .detail-container { padding-top:6rem; max-width:1100px; margin:0 auto; padding-bottom:4rem; padding-left:5%; padding-right:5%; }
+        .book-hero { display:grid; grid-template-columns:300px 1fr; gap:3rem; align-items:start; margin-bottom:4rem; }
+        .book-cover { position:sticky; top:8rem; }
+        .book-cover img { width:100%; border-radius:16px; box-shadow:var(--card-shadow); border:1px solid var(--glass-border); }
+        .book-info h1 { font-size:2.8rem; margin-bottom:1rem; line-height:1.1; background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        .book-meta { font-size:1.1rem; color:var(--text-dim); margin-bottom:2rem; display:flex; gap:1.5rem; flex-wrap:wrap; }
+        .book-meta span { display:flex; align-items:center; gap:0.4rem; }
+        .book-meta i { color:var(--primary); }
+        .ai-summary-box { background:var(--glass); backdrop-filter:blur(15px); border:1px solid var(--glass-border); border-radius:20px; padding:2rem; position:relative; overflow:hidden; }
+        .ai-summary-box::before { content:'AI ANALYSIS'; position:absolute; top:1rem; right:1.2rem; font-size:0.65rem; font-weight:800; letter-spacing:2px; color:var(--primary); opacity:0.4; }
+        .ai-summary-box h3 { margin-bottom:1rem; display:flex; align-items:center; gap:0.6rem; }
+        .ai-summary-box p { font-size:1.05rem; line-height:1.8; color:var(--text-dim); }
+        .more-like-this { margin-top:2rem; }
+        .more-like-this h2 { font-size:1.6rem; margin-bottom:2rem; text-align:center; }
+        @media (max-width:992px) {
+            .book-hero { grid-template-columns:1fr; text-align:center; gap:2rem; }
+            .book-cover { max-width:250px; margin:0 auto; position:relative; top:0; }
+            .book-info h1 { font-size:2rem; }
+            .book-meta { justify-content:center; }
         }
     </style>
 </head>
-
 <body>
-    <div class="cursor-follower"></div>
     <canvas id="canvas-bg"></canvas>
-
     <nav class="navbar">
-        <a href="/" class="navbar-brand">INFINITE LIBRARY</a>
+        <a href="/" class="navbar-brand">AI RECOMMENDER</a>
         <div class="nav-links">
             <a href="/" class="nav-link">Home</a>
+            <a href="/popular" class="nav-link">Popular</a>
             <a href="/recommend" class="nav-link">Discover</a>
-            <a href="#" class="nav-link">About</a>
+            <a href="/about" class="nav-link">About</a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </div>
     </nav>
 
-    <div class="container detail-container">
+    <div class="detail-container">
         <div class="book-hero">
             <div class="book-cover" data-aos="fade-right">
                 <img src="{{ book['Image-URL-L'] }}" alt="{{ book['Book-Title'] }}">
@@ -165,32 +58,24 @@
                     <span><i class="fas fa-building"></i> {{ book['Publisher'] }}</span>
                     <span><i class="fas fa-calendar-alt"></i> {{ book['Year-Of-Publication'] }}</span>
                 </div>
-
                 <div class="ai-summary-box">
-                    <h3><i class="fas fa-robot"></i> Cosmic Insight</h3>
+                    <h3><i class="fas fa-robot"></i> AI Insight</h3>
                     <p>{{ summary }}</p>
-                </div>
-
-                <div style="margin-top: 2rem;">
-                    <a href="https://www.amazon.com/s?k={{ book['Book-Title'] }}+{{ book['Book-Author'] }}"
-                        target="_blank" class="btn-glass">
-                        <i class="fab fa-amazon"></i> Buy on Amazon
-                    </a>
                 </div>
             </div>
         </div>
 
         <div class="more-like-this">
-            <h2 data-aos="fade-up">Deep Space Connections</h2>
-            <div class="book-container">
+            <h2 data-aos="fade-up">Similar Books</h2>
+            <div class="book-container" style="padding:0;">
                 {% for item in recommendations %}
                 <a href="/book/{{ item[0] }}" class="book-card" data-aos="fade-up"
-                    data-aos-delay="{{ loop.index * 100 }}" style="text-decoration: none; color: inherit;">
+                    data-aos-delay="{{ loop.index * 80 }}" style="text-decoration:none;color:inherit;">
                     <img src="{{ item[2] }}" alt="{{ item[0] }}">
                     <h4>{{ item[0] }}</h4>
                     <p>{{ item[1] }}</p>
-                    <div class="stats" style="justify-content: center;">
-                        <span style="color: var(--secondary)">Highly Compatible</span>
+                    <div class="stats" style="justify-content:center;">
+                        <span style="color:var(--secondary)">Recommended</span>
                     </div>
                 </a>
                 {% endfor %}
@@ -198,17 +83,14 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <footer class="footer"><p>&copy; 2026 AI-Based Book Recommendation System.</p></footer>
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            easing: 'ease-out-cubic',
-            once: true
-        });
-    </script>
+    <script>AOS.init({duration:800,easing:'ease-out-cubic',once:true});</script>
     <script type="module" src="{{ url_for('static', filename='scene.js') }}"></script>
+    <script>
+        function toggleTheme(){const h=document.documentElement,n=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);document.querySelector('#theme-toggle i').className=n==='light'?'fas fa-sun':'fas fa-moon';}
+        (function(){const s=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',s);const i=document.querySelector('#theme-toggle i');if(i)i.className=s==='light'?'fas fa-sun':'fas fa-moon';})();
+    </script>
     {% include 'chat_widget.html' %}
 </body>
-
 </html>

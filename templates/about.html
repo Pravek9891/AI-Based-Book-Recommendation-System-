@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | AI Book Recommender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .about-hero { padding:8rem 5% 3rem; text-align:center; }
+        .about-hero h1 { font-size:3rem; margin-bottom:1rem; background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        .about-hero p { color:var(--text-dim); font-size:1.1rem; max-width:600px; margin:0 auto; line-height:1.7; }
+        .about-content { max-width:900px; margin:3rem auto; padding:0 5%; }
+        .about-card { background:var(--glass); border:1px solid var(--glass-border); border-radius:20px; padding:2.5rem; margin-bottom:1.5rem; transition:all 0.3s; }
+        .about-card:hover { transform:translateY(-4px); box-shadow:var(--card-shadow); }
+        .about-card h3 { font-size:1.3rem; margin-bottom:0.8rem; display:flex; align-items:center; gap:0.6rem; }
+        .about-card h3 i { color:var(--primary); font-size:1.1rem; }
+        .about-card p { color:var(--text-dim); line-height:1.8; font-size:1rem; }
+        .tech-stack { display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1rem; }
+        .tech-tag { padding:0.4rem 1rem; background:var(--glass-bright); border:1px solid var(--glass-border); border-radius:50px; font-size:0.8rem; color:var(--text-dim); font-weight:600; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">AI RECOMMENDER</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/popular" class="nav-link">Popular</a>
+            <a href="/recommend" class="nav-link">Discover</a>
+            <a href="/about" class="nav-link" style="color:var(--primary);">About</a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        </div>
+    </nav>
+
+    <div class="about-hero">
+        <h1>About This Project</h1>
+        <p>An industry-grade AI recommendation engine, designed and developed to modernize how readers discover books.</p>
+    </div>
+
+    <div class="about-content">
+        <div class="about-card" data-aos="fade-up">
+            <h3><i class="fas fa-landmark"></i> The Problem Statement</h3>
+            <p>Our partner library approached us with a challenge: readers were struggling to discover new books that matched their interests. With a vast and growing collection, manual curation was no longer scalable. They needed an intelligent, automated system that could analyze reader preferences and deliver personalized recommendations in real-time.</p>
+        </div>
+        <div class="about-card" data-aos="fade-up" data-aos-delay="100">
+            <h3><i class="fas fa-chart-line"></i> Popularity Based Engine</h3>
+            <p>The first layer of our system uses a statistical aggregation model. We process anonymized borrowing and rating data provided by the library to compute weighted engagement scores. Books that consistently receive high ratings across a diverse set of readers are surfaced as universally recommended titles. A keyword-based categorization algorithm further organizes these titles into browsable genres.</p>
+        </div>
+        <div class="about-card" data-aos="fade-up" data-aos-delay="200">
+            <h3><i class="fas fa-project-diagram"></i> Collaborative Filtering Engine</h3>
+            <p>The core ML layer implements Item-Based Collaborative Filtering using Scikit-Learn's NearestNeighbors algorithm. We construct a sparse user-book interaction matrix and compute cosine similarity distances across the entire feature space. When a reader searches for a specific title, the model instantly retrieves the most mathematically similar books based on shared reader affinity patterns — not content metadata, but actual behavioral data.</p>
+        </div>
+        <div class="about-card" data-aos="fade-up" data-aos-delay="300">
+            <h3><i class="fas fa-robot"></i> AI Chatbot Integration</h3>
+            <p>To enhance the reader experience beyond simple recommendations, we integrated a conversational AI agent powered by the Llama 3.3 70B model via the Groq API. This intelligent chatbot can summarize books, answer questions about plots and themes, and provide contextual insights — essentially serving as a digital librarian available around the clock.</p>
+        </div>
+        <div class="about-card" data-aos="fade-up" data-aos-delay="400">
+            <h3><i class="fas fa-code"></i> Technology Stack</h3>
+            <p>This project is built entirely on modern, production-ready technologies:</p>
+            <div class="tech-stack">
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">Flask</span>
+                <span class="tech-tag">Scikit-Learn</span>
+                <span class="tech-tag">Pandas</span>
+                <span class="tech-tag">NumPy</span>
+                <span class="tech-tag">Groq API</span>
+                <span class="tech-tag">Llama 3.3 70B</span>
+                <span class="tech-tag">Wikipedia API</span>
+                <span class="tech-tag">HTML / CSS / JS</span>
+                <span class="tech-tag">Cloud Deployment</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><p>&copy; 2026 AI-Based Book Recommendation System. Built as an Industry Project.</p></footer>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>AOS.init({duration:800,easing:'ease-out-cubic',once:true});</script>
+    <script type="module" src="{{ url_for('static', filename='scene.js') }}"></script>
+    <script>
+        function toggleTheme(){const h=document.documentElement,n=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);document.querySelector('#theme-toggle i').className=n==='light'?'fas fa-sun':'fas fa-moon';}
+        (function(){const s=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',s);const i=document.querySelector('#theme-toggle i');if(i)i.className=s==='light'?'fas fa-sun':'fas fa-moon';})();
+    </script>
+    {% include 'chat_widget.html' %}
+</body>
+</html>

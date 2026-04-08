@@ -55,7 +55,7 @@ avg_rating_df = ratings_with_name.groupby('Book-Title').mean(numeric_only=True)[
 avg_rating_df.rename(columns={'Book-Rating':'avg_rating'}, inplace=True)
 
 popular_df = num_rating_df.merge(avg_rating_df, on='Book-Title')
-popular_df = popular_df[popular_df['num_ratings'] >= 250].sort_values('avg_rating', ascending=False).head(50)
+popular_df = popular_df[popular_df['num_ratings'] >= 250].sort_values('avg_rating', ascending=False).head(75)
 popular_df = popular_df.merge(books, on='Book-Title').drop_duplicates('Book-Title')[['Book-Title', 'Book-Author', 'Image-URL-M', 'num_ratings', 'avg_rating']]
 
 def categorize(title):

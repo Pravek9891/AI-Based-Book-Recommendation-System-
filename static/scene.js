@@ -17,7 +17,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     // Dynamic Lighting
-    const pointLight = new THREE.PointLight(0x6e57ff, 2);
+    const pointLight = new THREE.PointLight(0x3b82f6, 2);
     pointLight.position.set(5, 5, 5);
     scene.add(pointLight);
 
@@ -27,10 +27,10 @@ function init() {
     // Animated Floating Geometries
     const geometry = new THREE.IcosahedronGeometry(1.5, 0);
     const material = new THREE.MeshPhongMaterial({
-        color: 0x6e57ff,
+        color: 0x3b82f6,
         wireframe: true,
         transparent: true,
-        opacity: 0.1
+        opacity: 0.08
     });
 
     for (let i = 0; i < 30; i++) {

@@ -1,20 +1,26 @@
-<!-- Chatbot UI Widget -->
+<!-- AI Book Assistant Widget -->
 <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
 <div id="c-chatbot-widget" class="chatbot-hidden">
     <div class="chatbot-header">
-        <h4>Book Assistant</h4>
-        <button id="c-chatbot-toggle" class="btn btn-sm btn-default">&times;</button>
+        <div class="chatbot-header-info">
+            <i class="fas fa-robot"></i>
+            <div>
+                <h4>Book Assistant</h4>
+                <span class="chatbot-status">Online</span>
+            </div>
+        </div>
+        <button id="c-chatbot-toggle" aria-label="Close chat">&times;</button>
     </div>
     <div class="chatbot-body" id="c-chatbot-messages">
-        <!-- Messages will appear here -->
-        <div class="bot-message">Hi! Which book do you want to ask about?</div>
+        <div class="bot-message">Hi! I'm your AI book assistant. Tell me a book name and I'll answer any questions about it.</div>
     </div>
     <div class="chatbot-footer">
-        <input type="text" id="c-chatbot-input" class="form-control" placeholder="Type a message or book name...">
-        <button id="c-chatbot-send" class="btn btn-primary">Send</button>
-        <button id="c-chatbot-reset" class="btn btn-warning btn-sm" style="margin-top: 5px; width: 100%;">Change Book
-            Context</button>
+        <div class="chatbot-input-row">
+            <input type="text" id="c-chatbot-input" placeholder="Ask about any book...">
+            <button id="c-chatbot-send" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <button id="c-chatbot-reset"><i class="fas fa-rotate"></i> Change Book Context</button>
     </div>
 </div>
-<button id="c-chatbot-open" class="btn btn-success btn-lg">💬</button>
+<button id="c-chatbot-open" aria-label="Open chat"><i class="fas fa-comment-dots"></i></button>
 <script src="{{ url_for('static', filename='chatbot.js') }}"></script>

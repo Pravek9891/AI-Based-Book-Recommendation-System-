@@ -24,16 +24,34 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_key_for_chatbo
 
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/popular')
+def popular():
     genres = sorted(list(set(popular_df['category']))) if 'category' in popular_df.columns else []
-    return render_template('index.html',
-                           book_name=list(popular_df['Book-Title'].values),
-                           author=list(popular_df['Book-Author'].values),
-                           image=list(popular_df['Image-URL-M'].values),
-                           votes=list(popular_df['num_ratings'].values),
-                           rating=list(popular_df['avg_rating'].values),
-                           genres=genres,
-                           active_genre='All'
-                           )
+    return render_template('popular.html', genres=genres, active_genre='All')
+
+@app.route('/api/popular_books')
+def api_popular_books():
+    genre = request.args.get('genre', 'All')
+    page = int(request.args.get('page', 1))
+    per_page = 12
+    
+    if 'category' not in popular_df.columns or genre == 'All':
+        df = popular_df
+    else:
+        df = popular_df[popular_df['category'] == genre]
+    
+    total = len(df)
+    start = (page - 1) * per_page
+    end = start + per_page
+    sliced = df.iloc[start:end]
+    
+    return jsonify({
+        'books': sliced.to_dict(orient='records'),
+        'has_more': end < total,
+        'total': total
+    })
 
 @app.route('/filter_books')
 def filter_books():
@@ -43,6 +61,10 @@ def filter_books():
     
     filtered = popular_df[popular_df['category'] == genre]
     return jsonify(filtered.to_dict(orient='records'))
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 @app.route('/recommend')
 def recommend_ui():
@@ -55,9 +77,9 @@ def recommend():
     if user_input not in pt.index:
         return render_template('recommend.html', data=None)
 
-    # Use Scikit-Learn Model to dynamically predict top 5 neighbors
+    # Use Scikit-Learn Model to dynamically predict top 10 neighbors (11 including the query)
     book_index = np.where(pt.index == user_input)[0][0]
-    distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=6)
+    distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=11)
     
     similar_items = [pt.index[i] for i in indices[0][1:]]
 
@@ -72,7 +94,7 @@ def recommend():
         data.append(item)
 
     print(data)
-    return render_template('recommend.html', data=data)
+    return render_template('recommend.html', data=data, searched_book=user_input)
 
 @app.route('/book/<path:title>')
 def book_details(title):
@@ -88,7 +110,7 @@ def book_details(title):
     recommendations = []
     if title in pt.index:
         book_index = np.where(pt.index == title)[0][0]
-        distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=6)
+        distances, indices = model.kneighbors(pt.iloc[book_index, :].values.reshape(1, -1), n_neighbors=11)
         similar_items = [pt.index[i] for i in indices[0][1:]]
         
         for rec_title in similar_items:

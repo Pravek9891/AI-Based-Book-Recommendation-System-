@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (chatbotWidget.classList.contains('chatbot-hidden')) {
             chatbotWidget.classList.remove('chatbot-hidden');
             chatbotOpen.style.display = 'none';
+            chatbotInput.focus();
         } else {
             chatbotWidget.classList.add('chatbot-hidden');
             chatbotOpen.style.display = 'flex';
@@ -28,35 +29,49 @@ document.addEventListener('DOMContentLoaded', function () {
         chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.classList.add('typing-indicator');
+        typing.id = 'typing-dots';
+        typing.innerHTML = '<span></span><span></span><span></span>';
+        chatbotMessages.appendChild(typing);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    function hideTyping() {
+        const t = document.getElementById('typing-dots');
+        if (t) t.remove();
+    }
+
     function sendMessage() {
         const text = chatbotInput.value.trim();
         if (!text) return;
 
         addMessage(text, 'user');
         chatbotInput.value = '';
-
         chatbotSend.disabled = true;
         chatbotInput.disabled = true;
+        showTyping();
 
         fetch('/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: text })
         })
-            .then(response => response.json())
-            .then(data => {
-                addMessage(data.response, 'bot');
-                chatbotSend.disabled = false;
-                chatbotInput.disabled = false;
-                chatbotInput.focus();
-            })
-            .catch(error => {
-                addMessage('Error communicating with server.', 'bot');
-                chatbotSend.disabled = false;
-                chatbotInput.disabled = false;
-            });
+        .then(response => response.json())
+        .then(data => {
+            hideTyping();
+            addMessage(data.response, 'bot');
+            chatbotSend.disabled = false;
+            chatbotInput.disabled = false;
+            chatbotInput.focus();
+        })
+        .catch(error => {
+            hideTyping();
+            addMessage('Connection error. Please try again.', 'bot');
+            chatbotSend.disabled = false;
+            chatbotInput.disabled = false;
+        });
     }
 
     chatbotSend.addEventListener('click', sendMessage);
@@ -65,10 +80,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     chatbotReset.addEventListener('click', function () {
-        addMessage('Changing book context...', 'user');
+        addMessage('Switching context...', 'user');
+        showTyping();
         fetch('/reset_chat', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
+                hideTyping();
                 addMessage(data.response, 'bot');
             });
     });

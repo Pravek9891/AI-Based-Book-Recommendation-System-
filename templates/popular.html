@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular Books | AI Book Recommender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        .load-spinner { text-align:center; padding:2rem; color:var(--text-dim); display:none; }
+        .load-spinner.active { display:block; }
+        .load-spinner i { animation:spin 1s linear infinite; font-size:1.5rem; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">AI RECOMMENDER</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/popular" class="nav-link" style="color:var(--primary);">Popular</a>
+            <a href="/recommend" class="nav-link">Discover</a>
+            <a href="/about" class="nav-link">About</a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        </div>
+    </nav>
+
+    <div class="section-header" style="padding-top:6rem;">
+        <h2>Popularity Based Recommendations</h2>
+        <p>The highest-rated books from our collection, ranked by reader engagement and average rating.</p>
+    </div>
+
+    <div class="genre-filter-container">
+        <div class="genre-scroll">
+            <a href="#" data-genre="All" class="genre-btn active">All</a>
+            {% for genre in genres %}
+            <a href="#" data-genre="{{ genre }}" class="genre-btn">{{ genre }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="book-container" id="book-grid"></div>
+        <div class="load-spinner active" id="loader"><i class="fas fa-circle-notch"></i> Loading books...</div>
+    </div>
+
+    <footer class="footer"><p>&copy; 2026 AI-Based Book Recommendation System.</p></footer>
+
+    <script>
+        let currentPage = 1;
+        let currentGenre = 'All';
+        let isLoading = false;
+        let hasMore = true;
+        const grid = document.getElementById('book-grid');
+        const loader = document.getElementById('loader');
+
+        function createCard(book, index) {
+            return `<a href="/book/${encodeURIComponent(book['Book-Title'])}" class="book-card" data-aos="fade-up" data-aos-delay="${(index % 4) * 80}" style="text-decoration:none;color:inherit;">
+                <img src="${book['Image-URL-M']}" alt="${book['Book-Title']}">
+                <h4>${book['Book-Title'].replace(/&amp;/g, '&')}</h4>
+                <p>${book['Book-Author']}</p>
+                <div class="stats" style="justify-content:center;">
+                    <span><i class="fas fa-star" style="color:#fbbf24;"></i> ${parseFloat(book['avg_rating']).toFixed(1)}</span>
+                </div>
+            </a>`;
+        }
+
+        function loadBooks() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            loader.classList.add('active');
+
+            fetch(`/api/popular_books?genre=${currentGenre}&page=${currentPage}`)
+                .then(r => r.json())
+                .then(data => {
+                    data.books.forEach((book, i) => {
+                        grid.insertAdjacentHTML('beforeend', createCard(book, i));
+                    });
+                    hasMore = data.has_more;
+                    currentPage++;
+                    isLoading = false;
+                    loader.classList.toggle('active', hasMore);
+                    if (window.AOS) AOS.refreshHard();
+                })
+                .catch(() => { isLoading = false; loader.classList.remove('active'); });
+        }
+
+        // Infinite scroll with IntersectionObserver
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore) loadBooks();
+        }, { rootMargin: '200px' });
+        observer.observe(loader);
+
+        // Genre filter
+        document.querySelectorAll('.genre-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentGenre = this.dataset.genre;
+                currentPage = 1;
+                hasMore = true;
+                grid.innerHTML = '';
+                loadBooks();
+            });
+        });
+
+        // Initial load
+        loadBooks();
+    </script>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>AOS.init({duration:800,easing:'ease-out-cubic',once:true});</script>
+    <script type="module" src="{{ url_for('static', filename='scene.js') }}"></script>
+    <script>
+        function toggleTheme(){const h=document.documentElement,n=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);document.querySelector('#theme-toggle i').className=n==='light'?'fas fa-sun':'fas fa-moon';}
+        (function(){const s=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',s);const i=document.querySelector('#theme-toggle i');if(i)i.className=s==='light'?'fas fa-sun':'fas fa-moon';})();
+    </script>
+    {% include 'chat_widget.html' %}
+</body>
+</html>
