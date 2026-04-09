@@ -1,4 +1,4 @@
-# 🌌 Infinite Library: AI-Powered Cosmic Book Recommender
+# 🌌  AI-Powered Book Recommender
 
 Welcome to the **Infinite Library**, a premium, AI-driven book discovery platform that blends modern web aesthetics with cutting-edge Artificial Intelligence. Explore a "cosmic" collection of influential books, get personalized recommendations, and chat with an intelligent librarian.
 
